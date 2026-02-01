@@ -58,6 +58,11 @@
             background: rgba(74, 222, 128, 0.2);
         }
 
+        body.dark-mode .accuracy-btn.within-1 {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.35));
+            border-color: #f59e0b;
+        }
+
         body.dark-mode .accuracy-btn.within-5 {
             background: rgba(251, 191, 36, 0.2);
         }
@@ -404,6 +409,13 @@
             color: #166534;
         }
 
+        .accuracy-btn.within-1 {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(245, 158, 11, 0.4));
+            border-color: #f59e0b;
+            color: #92400e;
+            font-weight: 700;
+        }
+
         .accuracy-btn.within-5 {
             background: rgba(251, 191, 36, 0.25);
             border-color: #fbbf24;
@@ -746,6 +758,7 @@
                 <button class="accuracy-btn within-10" id="btnWithin10" disabled>Within 10</button>
                 <button class="accuracy-btn within-5" id="btnWithin5" disabled>Within 5</button>
                 <button class="accuracy-btn within-3" id="btnWithin3" disabled>Within 3</button>
+                <button class="accuracy-btn within-1" id="btnWithin1" disabled>1</button>
             </div>
         </div>
 
@@ -851,6 +864,7 @@
         const btnWithin10 = document.getElementById('btnWithin10');
         const btnWithin5 = document.getElementById('btnWithin5');
         const btnWithin3 = document.getElementById('btnWithin3');
+        const btnWithin1 = document.getElementById('btnWithin1');
         const attemptCurrent = document.getElementById('attemptCurrent');
         const attemptTotal = document.getElementById('attemptTotal');
         const accuracyCount = document.getElementById('accuracyCount');
@@ -932,6 +946,10 @@
             btnWithin10.addEventListener('click', () => recordAccuracy(10));
             btnWithin5.addEventListener('click', () => recordAccuracy(5));
             btnWithin3.addEventListener('click', () => recordAccuracy(3));
+            btnWithin1.addEventListener('click', () => {
+                showPerfectShotCelebration();
+                recordAccuracy(1);
+            });
 
             document.querySelectorAll('.club-option').forEach(option => {
                 option.addEventListener('click', () => toggleClub(option));
@@ -1244,6 +1262,7 @@
             btnWithin10.disabled = !enabled;
             btnWithin5.disabled = !enabled;
             btnWithin3.disabled = !enabled;
+            btnWithin1.disabled = !enabled;
         }
 
         function updateStarsDisplay() {
@@ -1280,6 +1299,30 @@
             celebration.appendChild(emoji);
 
             setTimeout(() => emoji.remove(), 2000);
+        }
+
+        // Perfect shot celebration (within 1 yard)
+        function showPerfectShotCelebration() {
+            celebration.classList.add('active');
+
+            // Burst of emojis: flame, trophy, strong arm
+            const emojis = ['🔥', '🏆', '💪'];
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    const emoji = document.createElement('span');
+                    emoji.className = 'fire-emoji';
+                    emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                    emoji.style.left = `${Math.random() * 100}%`;
+                    emoji.style.bottom = '0';
+                    celebration.appendChild(emoji);
+                    setTimeout(() => emoji.remove(), 2000);
+                }, i * 50);
+            }
+
+            setTimeout(() => {
+                celebration.classList.remove('active');
+                celebration.innerHTML = '';
+            }, 2000);
         }
 
         // History
