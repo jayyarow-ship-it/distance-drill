@@ -779,12 +779,16 @@
 
         <div class="club-section">
             <h3>Club Selection:</h3>
+            <div class="club-option selected" id="clubShortWedges" data-club="shortWedges">
+                <input type="checkbox" class="club-checkbox" checked>
+                <span class="club-label">Short Wedges <span class="club-range">(15-80)</span></span>
+            </div>
             <div class="club-option selected" id="clubWedges" data-club="wedges">
                 <input type="checkbox" class="club-checkbox" checked>
-                <span class="club-label">Wedges <span class="club-range">(20-130)</span></span>
+                <span class="club-label">Wedges <span class="club-range">(80-130)</span></span>
             </div>
-            <div class="club-option selected" id="clubShortIrons" data-club="shortIrons">
-                <input type="checkbox" class="club-checkbox" checked>
+            <div class="club-option" id="clubShortIrons" data-club="shortIrons">
+                <input type="checkbox" class="club-checkbox">
                 <span class="club-label">Short Irons <span class="club-range">(130-170)</span></span>
             </div>
             <div class="club-option" id="clubLongIrons" data-club="longIrons">
@@ -825,7 +829,7 @@
             currentDistance: null,
             currentAttempt: 0,
             attempts: [],
-            selectedClubs: ['wedges', 'shortIrons'],
+            selectedClubs: ['shortWedges', 'wedges'],
             timerInterval: null,
             timeRemaining: 35,
             sessions: [],
@@ -839,7 +843,8 @@
         const STAR_THRESHOLD = 12; // 80% of 15
 
         const ranges = {
-            wedges: { min: 20, max: 130 },
+            shortWedges: { min: 15, max: 80 },
+            wedges: { min: 80, max: 130 },
             shortIrons: { min: 130, max: 170 },
             longIrons: { min: 170, max: 220 }
         };
@@ -1342,6 +1347,7 @@
             }
 
             const clubNames = {
+                shortWedges: 'Short Wedges',
                 wedges: 'Wedges',
                 shortIrons: 'Short Irons',
                 longIrons: 'Long Irons'
