@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Distance Drill</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            color: #1a1a1a;
+            padding: 16px;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Dark Mode */
+        body.dark-mode {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        body.dark-mode .distance-display {
+            background: #2a2a2a;
+        }
+
+        body.dark-mode .accuracy-section,
+        body.dark-mode .stats-section,
+        body.dark-mode .club-section {
+            background: #2a2a2a;
+        }
+
+        body.dark-mode .club-option {
+            background: #333;
+        }
+
+        body.dark-mode .club-option.selected {
+            background: rgba(74, 222, 128, 0.2);
+        }
+
+        body.dark-mode .action-btn {
+            background: #333;
+        }
+
+        body.dark-mode .accuracy-btn {
+            background: #333;
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        body.dark-mode .accuracy-btn.within-3 {
+            background: rgba(74, 222, 128, 0.2);
+        }
+
+        body.dark-mode .accuracy-btn.within-5 {
+            background: rgba(251, 191, 36, 0.2);
+        }
+
+        body.dark-mode .accuracy-btn.within-10 {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        body.dark-mode .modal-content {
+            background: #2a2a2a;
+        }
+
+        body.dark-mode .history-item {
+            background: #333;
+        }
+
+        body.dark-mode .theme-toggle {
+            background: #333;
+        }
+
+        body.dark-mode header {
+            border-bottom-color: rgba(255,255,255,0.2);
+        }
+
+        body.dark-mode .stat-row {
+            border-bottom-color: rgba(255,255,255,0.1);
+        }
+
+        body.dark-mode .start-message {
+            color: rgba(255,255,255,0.6);
+        }
+
+        body.dark-mode .distance-unit {
+            color: rgba(255,255,255,0.8);
+        }
+
+        body.dark-mode .timer-display {
+            color: rgba(255,255,255,0.9);
+        }
+
+        body.dark-mode .accuracy-label {
+            color: rgba(255,255,255,0.9);
+        }
+
+        body.dark-mode .stat-label {
+            color: rgba(255,255,255,0.7);
+        }
+
+        body.dark-mode .club-section h3 {
+            color: rgba(255,255,255,0.9);
+        }
+
+        body.dark-mode .club-range {
+            color: rgba(255,255,255,0.6);
+        }
+
+        body.dark-mode .timer-bar {
+            background: rgba(255,255,255,0.2);
+        }
+
+        body.dark-mode .modal-header {
+            border-bottom-color: rgba(255,255,255,0.2);
+        }
+
+        body.dark-mode .history-date {
+            color: rgba(255,255,255,0.6);
+        }
+
+        body.dark-mode .history-clubs {
+            color: rgba(255,255,255,0.8);
+        }
+
+        body.dark-mode .no-history {
+            color: rgba(255,255,255,0.6);
+        }
+
+        body.dark-mode .session-complete p {
+            color: rgba(255,255,255,0.8);
+        }
+
+        body.dark-mode .session-complete h2 {
+            color: #4ade80;
+        }
+
+        body.dark-mode .close-btn {
+            color: #fff;
+        }
+
+        body.dark-mode .paused-indicator {
+            color: #fbbf24;
+        }
+
+        body.dark-mode .accuracy-btn {
+            color: #fff;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 16px 0;
+            border-bottom: 2px solid rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: #e5e5e5;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 12px;
+            color: #1a1a1a;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:active {
+            background: #d5d5d5;
+        }
+
+        .theme-toggle .icon {
+            font-size: 1.1rem;
+        }
+
+        .distance-display {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .distance-number {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: #4ade80;
+        }
+
+        .distance-unit {
+            font-size: 1.5rem;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .timer-display {
+            margin-top: 16px;
+            font-size: 1.2rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e5e5;
+            border-radius: 3px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .timer-bar-fill {
+            height: 100%;
+            background: #4ade80;
+            border-radius: 3px;
+            transition: width 1s linear;
+        }
+
+        .timer-bar-fill.warning {
+            background: #fbbf24;
+        }
+
+        .timer-bar-fill.danger {
+            background: #ef4444;
+        }
+
+        .start-message {
+            color: #888;
+            font-size: 1.2rem;
+        }
+
+        .main-button {
+            width: 100%;
+            padding: 18px 24px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: #4ade80;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .main-button:active {
+            transform: scale(0.98);
+        }
+
+        .main-button:disabled {
+            background: #6b7280;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .session-controls {
+            display: none;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .session-controls.active {
+            display: flex;
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: 16px 24px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .control-btn:active {
+            transform: scale(0.98);
+        }
+
+        .pause-btn {
+            background: #fbbf24;
+            color: #1a472a;
+        }
+
+        .pause-btn.paused {
+            background: #4ade80;
+        }
+
+        .stop-btn {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .refresh-btn {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .paused-indicator {
+            display: none;
+            color: #d97706;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .paused-indicator.active {
+            display: block;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .accuracy-section {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .accuracy-label {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            text-align: center;
+            color: #333;
+        }
+
+        .accuracy-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .accuracy-btn {
+            flex: 1;
+            padding: 14px 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            background: #f5f5f5;
+            color: #1a1a1a;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .accuracy-btn:active {
+            transform: scale(0.96);
+        }
+
+        .accuracy-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .accuracy-btn.within-3 {
+            background: rgba(74, 222, 128, 0.25);
+            border-color: #4ade80;
+            color: #166534;
+        }
+
+        .accuracy-btn.within-5 {
+            background: rgba(251, 191, 36, 0.25);
+            border-color: #fbbf24;
+            color: #92400e;
+        }
+
+        .accuracy-btn.within-10 {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .stats-section {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        .stat-value {
+            font-weight: 600;
+        }
+
+        .star-count {
+            color: #fbbf24;
+        }
+
+        .club-section {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .club-section h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .club-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .club-option:last-child {
+            margin-bottom: 0;
+        }
+
+        .club-option.selected {
+            background: rgba(74, 222, 128, 0.25);
+            border: 2px solid #4ade80;
+        }
+
+        .club-option:not(.selected) {
+            border: 2px solid transparent;
+        }
+
+        .club-checkbox {
+            width: 24px;
+            height: 24px;
+            margin-right: 12px;
+            accent-color: #4ade80;
+        }
+
+        .club-label {
+            flex: 1;
+        }
+
+        .club-range {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 14px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            background: #e5e5e5;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-btn:active {
+            background: #d5d5d5;
+        }
+
+        /* History Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active {
+            display: block;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h2 {
+            font-size: 1.2rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #1a1a1a;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .history-item {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .history-date {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .history-clubs {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .history-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-accuracy {
+            font-weight: 600;
+        }
+
+        .history-star {
+            font-size: 1.2rem;
+        }
+
+        .no-history {
+            text-align: center;
+            color: #888;
+            padding: 40px 20px;
+        }
+
+        /* Celebration Animation */
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 200;
+            display: none;
+        }
+
+        .celebration.active {
+            display: block;
+        }
+
+        .fire-emoji {
+            position: absolute;
+            font-size: 2rem;
+            animation: float-up 2s ease-out forwards;
+        }
+
+        @keyframes float-up {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-300px) scale(1.5);
+            }
+        }
+
+        .star-earned-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 30px 40px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 201;
+            display: none;
+        }
+
+        .star-earned-message.active {
+            display: block;
+            animation: pop-in 0.3s ease-out;
+        }
+
+        @keyframes pop-in {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .star-earned-message .star-icon {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .star-earned-message .message {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* Session complete styles */
+        .session-complete {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .session-complete h2 {
+            margin-bottom: 16px;
+            color: #16a34a;
+        }
+
+        .session-complete p {
+            margin-bottom: 8px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-row">
+                <h1>Distance Drill</h1>
+                <button class="theme-toggle" id="themeToggle">
+                    <span class="icon" id="themeIcon">&#9790;</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="distance-display" id="distanceDisplay">
+            <span class="start-message" id="startMessage">Select clubs and tap the button to start</span>
+            <span class="distance-number" id="distanceNumber" style="display: none;">--</span>
+            <span class="distance-unit" id="distanceUnit" style="display: none;">yards</span>
+            <div class="timer-display" id="timerDisplay" style="display: none;">
+                <span id="timerIcon">&#9201;</span>
+                <span id="timerText">0:35</span>
+            </div>
+            <div class="timer-bar" id="timerBar" style="display: none;">
+                <div class="timer-bar-fill" id="timerBarFill"></div>
+            </div>
+            <div class="paused-indicator" id="pausedIndicator">PAUSED</div>
+        </div>
+
+        <button class="main-button" id="mainButton">GIVE ME NUMBERS</button>
+
+        <div class="session-controls" id="sessionControls">
+            <button class="control-btn pause-btn" id="pauseBtn">PAUSE</button>
+            <button class="control-btn refresh-btn" id="refreshBtn">NEW #</button>
+            <button class="control-btn stop-btn" id="stopBtn">STOP</button>
+        </div>
+
+        <div class="accuracy-section">
+            <div class="accuracy-label">How close was your shot?</div>
+            <div class="accuracy-buttons">
+                <button class="accuracy-btn within-10" id="btnWithin10" disabled>Within 10</button>
+                <button class="accuracy-btn within-5" id="btnWithin5" disabled>Within 5</button>
+                <button class="accuracy-btn within-3" id="btnWithin3" disabled>Within 3</button>
+            </div>
+        </div>
+
+        <div class="stats-section" id="statsSection">
+            <div class="stat-row">
+                <span class="stat-label">Attempt</span>
+                <span class="stat-value"><span id="attemptCurrent">0</span> of 15</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Accuracy</span>
+                <span class="stat-value"><span id="accuracyCount">0</span>/<span id="attemptTotal">0</span> (<span id="accuracyPercent">0</span>%)</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Stars this session</span>
+                <span class="stat-value star-count" id="starsCount">0</span>
+            </div>
+        </div>
+
+        <div class="club-section">
+            <h3>Club Selection:</h3>
+            <div class="club-option selected" id="clubWedges" data-club="wedges">
+                <input type="checkbox" class="club-checkbox" checked>
+                <span class="club-label">Wedges <span class="club-range">(20-130)</span></span>
+            </div>
+            <div class="club-option selected" id="clubShortIrons" data-club="shortIrons">
+                <input type="checkbox" class="club-checkbox" checked>
+                <span class="club-label">Short Irons <span class="club-range">(130-170)</span></span>
+            </div>
+            <div class="club-option" id="clubLongIrons" data-club="longIrons">
+                <input type="checkbox" class="club-checkbox">
+                <span class="club-label">Long Irons <span class="club-range">(170-220)</span></span>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="action-btn" id="btnHistory">View History</button>
+            <button class="action-btn" id="btnExport">Export CSV</button>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Session History</h2>
+                <button class="close-btn" id="closeHistory">&times;</button>
+            </div>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <!-- Celebration -->
+    <div class="celebration" id="celebration"></div>
+    <div class="star-earned-message" id="starMessage">
+        <span class="star-icon">&#11088;</span>
+        <span class="message">You earned a star!</span>
+    </div>
+
+    <script>
+        // App State
+        const state = {
+            isActive: false,
+            isPaused: false,
+            currentDistance: null,
+            currentAttempt: 0,
+            attempts: [],
+            selectedClubs: ['wedges', 'shortIrons'],
+            timerInterval: null,
+            timeRemaining: 35,
+            sessions: [],
+            totalStars: 0
+        };
+
+        // Constants
+        const TOTAL_ATTEMPTS = 15;
+        const TIMER_DURATION = 35;
+        const STAR_THRESHOLD = 12; // 80% of 15
+
+        const ranges = {
+            wedges: { min: 20, max: 130 },
+            shortIrons: { min: 130, max: 170 },
+            longIrons: { min: 170, max: 220 }
+        };
+
+        // DOM Elements
+        const distanceNumber = document.getElementById('distanceNumber');
+        const distanceUnit = document.getElementById('distanceUnit');
+        const startMessage = document.getElementById('startMessage');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerText = document.getElementById('timerText');
+        const timerBar = document.getElementById('timerBar');
+        const timerBarFill = document.getElementById('timerBarFill');
+        const mainButton = document.getElementById('mainButton');
+        const sessionControls = document.getElementById('sessionControls');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const pausedIndicator = document.getElementById('pausedIndicator');
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const btnWithin10 = document.getElementById('btnWithin10');
+        const btnWithin5 = document.getElementById('btnWithin5');
+        const btnWithin3 = document.getElementById('btnWithin3');
+        const attemptCurrent = document.getElementById('attemptCurrent');
+        const attemptTotal = document.getElementById('attemptTotal');
+        const accuracyCount = document.getElementById('accuracyCount');
+        const accuracyPercent = document.getElementById('accuracyPercent');
+        const starsCount = document.getElementById('starsCount');
+        const historyModal = document.getElementById('historyModal');
+        const historyList = document.getElementById('historyList');
+        const celebration = document.getElementById('celebration');
+        const starMessage = document.getElementById('starMessage');
+
+        // Initialize
+        function init() {
+            loadFromStorage();
+            loadTheme();
+            updateStarsDisplay();
+            setupEventListeners();
+        }
+
+        // Theme
+        function loadTheme() {
+            const darkMode = localStorage.getItem('golfDrillDarkMode') === 'true';
+            if (darkMode) {
+                document.body.classList.add('dark-mode');
+                themeIcon.innerHTML = '&#9728;'; // Sun
+            } else {
+                themeIcon.innerHTML = '&#9790;'; // Moon
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('golfDrillDarkMode', isDark);
+            themeIcon.innerHTML = isDark ? '&#9728;' : '&#9790;';
+        }
+
+        // Storage
+        function loadFromStorage() {
+            const data = localStorage.getItem('golfDistanceDrill');
+            if (data) {
+                const parsed = JSON.parse(data);
+                state.sessions = parsed.sessions || [];
+                state.totalStars = state.sessions.filter(s => s.starEarned).length;
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('golfDistanceDrill', JSON.stringify({
+                sessions: state.sessions
+            }));
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            mainButton.addEventListener('click', handleMainButton);
+            pauseBtn.addEventListener('click', togglePause);
+            refreshBtn.addEventListener('click', refreshNumber);
+            stopBtn.addEventListener('click', stopSession);
+            themeToggle.addEventListener('click', toggleTheme);
+
+            btnWithin10.addEventListener('click', () => recordAccuracy(10));
+            btnWithin5.addEventListener('click', () => recordAccuracy(5));
+            btnWithin3.addEventListener('click', () => recordAccuracy(3));
+
+            document.querySelectorAll('.club-option').forEach(option => {
+                option.addEventListener('click', () => toggleClub(option));
+            });
+
+            document.getElementById('btnHistory').addEventListener('click', showHistory);
+            document.getElementById('closeHistory').addEventListener('click', hideHistory);
+            document.getElementById('btnExport').addEventListener('click', exportCSV);
+
+            historyModal.addEventListener('click', (e) => {
+                if (e.target === historyModal) hideHistory();
+            });
+        }
+
+        // Club Selection
+        function toggleClub(option) {
+            if (state.isActive) return;
+
+            const club = option.dataset.club;
+            const checkbox = option.querySelector('.club-checkbox');
+            const isSelected = option.classList.contains('selected');
+
+            if (isSelected && state.selectedClubs.length === 1) {
+                return; // Must have at least one club selected
+            }
+
+            if (isSelected) {
+                option.classList.remove('selected');
+                checkbox.checked = false;
+                state.selectedClubs = state.selectedClubs.filter(c => c !== club);
+            } else {
+                option.classList.add('selected');
+                checkbox.checked = true;
+                state.selectedClubs.push(club);
+            }
+        }
+
+        // Main Button Handler
+        function handleMainButton() {
+            if (!state.isActive) {
+                startSession();
+            } else {
+                // During session, button could be used to skip (optional)
+            }
+        }
+
+        // Session Management
+        function startSession() {
+            state.isActive = true;
+            state.isPaused = false;
+            state.currentAttempt = 0;
+            state.attempts = [];
+
+            mainButton.style.display = 'none';
+            sessionControls.classList.add('active');
+            pauseBtn.textContent = 'PAUSE';
+            pauseBtn.classList.remove('paused');
+
+            // Disable club selection during session
+            document.querySelectorAll('.club-option').forEach(opt => {
+                opt.style.pointerEvents = 'none';
+                opt.style.opacity = '0.6';
+            });
+
+            nextNumber();
+        }
+
+        function togglePause() {
+            if (state.isPaused) {
+                // Resume
+                state.isPaused = false;
+                pauseBtn.textContent = 'PAUSE';
+                pauseBtn.classList.remove('paused');
+                pausedIndicator.classList.remove('active');
+                setAccuracyButtonsEnabled(true);
+                resumeTimer();
+            } else {
+                // Pause
+                state.isPaused = true;
+                pauseBtn.textContent = 'RESUME';
+                pauseBtn.classList.add('paused');
+                pausedIndicator.classList.add('active');
+                setAccuracyButtonsEnabled(false);
+                clearInterval(state.timerInterval);
+            }
+        }
+
+        function resumeTimer() {
+            state.timerInterval = setInterval(() => {
+                state.timeRemaining--;
+                updateTimerDisplay();
+
+                if (state.timeRemaining <= 0) {
+                    recordAccuracy(10);
+                }
+            }, 1000);
+        }
+
+        function stopSession() {
+            if (state.attempts.length === 0) {
+                // No attempts recorded, just cancel without saving
+                resetSessionUI();
+                return;
+            }
+
+            // End session early and save what we have
+            endSession(true);
+        }
+
+        function refreshNumber() {
+            if (!state.isActive || state.isPaused) return;
+
+            // Generate new distance and reset timer (doesn't count as an attempt)
+            state.currentDistance = getRandomDistance();
+            distanceNumber.textContent = state.currentDistance;
+            startTimer();
+        }
+
+        function endSession(stoppedEarly = false) {
+            state.isActive = false;
+            state.isPaused = false;
+            clearInterval(state.timerInterval);
+
+            // Calculate results
+            const totalAttempts = state.attempts.length;
+            const goodShots = state.attempts.filter(a => a.accuracy <= 5).length;
+            // Only award star if completed all 15 attempts with 80%+ accuracy
+            const starEarned = !stoppedEarly && goodShots >= STAR_THRESHOLD;
+
+            // Save session if there are attempts
+            if (totalAttempts > 0) {
+                const session = {
+                    id: generateUUID(),
+                    date: new Date().toISOString(),
+                    clubTypes: [...state.selectedClubs],
+                    attempts: [...state.attempts],
+                    starEarned: starEarned,
+                    stoppedEarly: stoppedEarly
+                };
+
+                state.sessions.push(session);
+                saveToStorage();
+
+                if (starEarned) {
+                    state.totalStars++;
+                    showCelebration();
+                }
+
+                // Show completion
+                showSessionComplete(starEarned, stoppedEarly);
+            }
+
+            resetSessionUI();
+        }
+
+        function resetSessionUI() {
+            state.isActive = false;
+            state.isPaused = false;
+            clearInterval(state.timerInterval);
+
+            // Hide session controls, show main button
+            sessionControls.classList.remove('active');
+            mainButton.style.display = 'block';
+            mainButton.disabled = false;
+            mainButton.textContent = 'GIVE ME NUMBERS';
+            pausedIndicator.classList.remove('active');
+
+            // Re-enable club selection
+            document.querySelectorAll('.club-option').forEach(opt => {
+                opt.style.pointerEvents = 'auto';
+                opt.style.opacity = '1';
+            });
+
+            setAccuracyButtonsEnabled(false);
+
+            // Reset display if cancelled with no attempts
+            if (state.attempts.length === 0) {
+                startMessage.textContent = 'Select clubs and tap the button to start';
+                startMessage.style.display = 'block';
+                distanceNumber.style.display = 'none';
+                distanceUnit.style.display = 'none';
+                timerDisplay.style.display = 'none';
+                timerBar.style.display = 'none';
+            }
+        }
+
+        function showSessionComplete(starEarned, stoppedEarly = false) {
+            const totalAttempts = state.attempts.length;
+            const goodShots = state.attempts.filter(a => a.accuracy <= 5).length;
+            const percentage = totalAttempts > 0 ? Math.round((goodShots / totalAttempts) * 100) : 0;
+
+            const title = stoppedEarly ? 'Session Stopped' : 'Session Complete!';
+            const subtitle = stoppedEarly
+                ? `Completed ${totalAttempts} of ${TOTAL_ATTEMPTS} attempts`
+                : `Good shots: ${goodShots}/${TOTAL_ATTEMPTS} (${percentage}%)`;
+
+            startMessage.innerHTML = `
+                <div class="session-complete">
+                    <h2>${title}</h2>
+                    <p>${subtitle}</p>
+                    <p>Accuracy: ${goodShots}/${totalAttempts} (${percentage}%)</p>
+                    <p>${starEarned ? '&#11088; Star earned!' : (stoppedEarly ? '' : 'Keep practicing!')}</p>
+                </div>
+            `;
+            startMessage.style.display = 'block';
+            distanceNumber.style.display = 'none';
+            distanceUnit.style.display = 'none';
+            timerDisplay.style.display = 'none';
+            timerBar.style.display = 'none';
+        }
+
+        // Number Generation
+        function getRandomDistance() {
+            const selectedType = state.selectedClubs[Math.floor(Math.random() * state.selectedClubs.length)];
+            const range = ranges[selectedType];
+            return Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+        }
+
+        function nextNumber() {
+            state.currentAttempt++;
+
+            if (state.currentAttempt > TOTAL_ATTEMPTS) {
+                endSession(false);
+                return;
+            }
+
+            state.currentDistance = getRandomDistance();
+
+            // Update display
+            startMessage.style.display = 'none';
+            distanceNumber.style.display = 'block';
+            distanceUnit.style.display = 'block';
+            timerDisplay.style.display = 'flex';
+            timerBar.style.display = 'block';
+
+            distanceNumber.textContent = state.currentDistance;
+
+            // Update stats
+            attemptCurrent.textContent = state.currentAttempt;
+
+            // Enable accuracy buttons
+            setAccuracyButtonsEnabled(true);
+
+            // Start timer
+            startTimer();
+        }
+
+        // Timer
+        function startTimer() {
+            clearInterval(state.timerInterval);
+            state.timeRemaining = TIMER_DURATION;
+            updateTimerDisplay();
+
+            state.timerInterval = setInterval(() => {
+                state.timeRemaining--;
+                updateTimerDisplay();
+
+                if (state.timeRemaining <= 0) {
+                    // Auto-advance with no accuracy recorded (counts as miss)
+                    recordAccuracy(10);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const seconds = state.timeRemaining;
+            timerText.textContent = `0:${seconds.toString().padStart(2, '0')}`;
+
+            const percentage = (seconds / TIMER_DURATION) * 100;
+            timerBarFill.style.width = `${percentage}%`;
+
+            // Color coding
+            timerBarFill.classList.remove('warning', 'danger');
+            if (seconds <= 10) {
+                timerBarFill.classList.add('danger');
+            } else if (seconds <= 20) {
+                timerBarFill.classList.add('warning');
+            }
+        }
+
+        // Accuracy Recording
+        function recordAccuracy(accuracy) {
+            state.attempts.push({
+                target: state.currentDistance,
+                accuracy: accuracy
+            });
+
+            updateAccuracyStats();
+            nextNumber();
+        }
+
+        function updateAccuracyStats() {
+            const goodShots = state.attempts.filter(a => a.accuracy <= 5).length;
+            const total = state.attempts.length;
+            const percentage = total > 0 ? Math.round((goodShots / total) * 100) : 0;
+
+            accuracyCount.textContent = goodShots;
+            attemptTotal.textContent = total;
+            accuracyPercent.textContent = percentage;
+        }
+
+        function setAccuracyButtonsEnabled(enabled) {
+            btnWithin10.disabled = !enabled;
+            btnWithin5.disabled = !enabled;
+            btnWithin3.disabled = !enabled;
+        }
+
+        function updateStarsDisplay() {
+            starsCount.textContent = state.totalStars;
+        }
+
+        // Celebration
+        function showCelebration() {
+            celebration.classList.add('active');
+            starMessage.classList.add('active');
+
+            // Create fire emojis
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    createFireEmoji();
+                }, i * 100);
+            }
+
+            setTimeout(() => {
+                celebration.classList.remove('active');
+                starMessage.classList.remove('active');
+                celebration.innerHTML = '';
+                updateStarsDisplay();
+            }, 3000);
+        }
+
+        function createFireEmoji() {
+            const emoji = document.createElement('span');
+            emoji.className = 'fire-emoji';
+            emoji.textContent = ['&#128293;', '&#11088;', '&#127942;'][Math.floor(Math.random() * 3)];
+            emoji.innerHTML = emoji.textContent;
+            emoji.style.left = `${Math.random() * 100}%`;
+            emoji.style.bottom = '0';
+            celebration.appendChild(emoji);
+
+            setTimeout(() => emoji.remove(), 2000);
+        }
+
+        // History
+        function showHistory() {
+            historyModal.classList.add('active');
+            renderHistory();
+        }
+
+        function hideHistory() {
+            historyModal.classList.remove('active');
+        }
+
+        function renderHistory() {
+            if (state.sessions.length === 0) {
+                historyList.innerHTML = '<div class="no-history">No sessions recorded yet</div>';
+                return;
+            }
+
+            const clubNames = {
+                wedges: 'Wedges',
+                shortIrons: 'Short Irons',
+                longIrons: 'Long Irons'
+            };
+
+            historyList.innerHTML = state.sessions
+                .slice()
+                .reverse()
+                .map(session => {
+                    const goodShots = session.attempts.filter(a => a.accuracy <= 5).length;
+                    const total = session.attempts.length;
+                    const percentage = Math.round((goodShots / total) * 100);
+                    const date = new Date(session.date);
+                    const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const clubs = session.clubTypes.map(c => clubNames[c]).join(', ');
+
+                    return `
+                        <div class="history-item">
+                            <div class="history-date">${dateStr}</div>
+                            <div class="history-clubs">${clubs}</div>
+                            <div class="history-stats">
+                                <span class="history-accuracy">${goodShots}/${total} (${percentage}%)</span>
+                                <span class="history-star">${session.starEarned ? '&#11088;' : ''}</span>
+                            </div>
+                        </div>
+                    `;
+                })
+                .join('');
+        }
+
+        // CSV Export
+        function exportCSV() {
+            if (state.sessions.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const headers = ['Date', 'Club Types', 'Attempts', 'Good Shots', 'Accuracy %', 'Star Earned'];
+            const rows = state.sessions.map(session => {
+                const goodShots = session.attempts.filter(a => a.accuracy <= 5).length;
+                const total = session.attempts.length;
+                const percentage = Math.round((goodShots / total) * 100);
+                const date = new Date(session.date).toLocaleString();
+                const clubs = session.clubTypes.join(';');
+
+                return [
+                    `"${date}"`,
+                    `"${clubs}"`,
+                    total,
+                    goodShots,
+                    percentage,
+                    session.starEarned ? 'Yes' : 'No'
+                ].join(',');
+            });
+
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `golf-drill-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+        }
+
+        // Utilities
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // Start app
+        init();
+    </script>
+</body>
+</html>
