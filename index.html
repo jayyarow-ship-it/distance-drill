@@ -66,6 +66,11 @@
             background: rgba(239, 68, 68, 0.2);
         }
 
+        body.dark-mode .accuracy-btn.within-10plus {
+            background: rgba(127, 29, 29, 0.3);
+            border-color: #991b1b;
+        }
+
         body.dark-mode .modal-content {
             background: #2a2a2a;
         }
@@ -411,6 +416,12 @@
             color: #991b1b;
         }
 
+        .accuracy-btn.within-10plus {
+            background: rgba(127, 29, 29, 0.25);
+            border-color: #7f1d1d;
+            color: #7f1d1d;
+        }
+
         .stats-section {
             background: #fff;
             border-radius: 16px;
@@ -731,6 +742,7 @@
         <div class="accuracy-section">
             <div class="accuracy-label">How close was your shot?</div>
             <div class="accuracy-buttons">
+                <button class="accuracy-btn within-10plus" id="btnWithin10Plus" disabled>10+</button>
                 <button class="accuracy-btn within-10" id="btnWithin10" disabled>Within 10</button>
                 <button class="accuracy-btn within-5" id="btnWithin5" disabled>Within 5</button>
                 <button class="accuracy-btn within-3" id="btnWithin3" disabled>Within 3</button>
@@ -804,7 +816,8 @@
             timerInterval: null,
             timeRemaining: 35,
             sessions: [],
-            totalStars: 0
+            totalStars: 0,
+            wakeLock: null
         };
 
         // Constants
@@ -834,6 +847,7 @@
         const pausedIndicator = document.getElementById('pausedIndicator');
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
+        const btnWithin10Plus = document.getElementById('btnWithin10Plus');
         const btnWithin10 = document.getElementById('btnWithin10');
         const btnWithin5 = document.getElementById('btnWithin5');
         const btnWithin3 = document.getElementById('btnWithin3');
@@ -872,6 +886,24 @@
             themeIcon.innerHTML = isDark ? '&#9728;' : '&#9790;';
         }
 
+        // Wake Lock (keep screen on)
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    state.wakeLock = await navigator.wakeLock.request('screen');
+                } catch (err) {
+                    console.log('Wake Lock error:', err);
+                }
+            }
+        }
+
+        function releaseWakeLock() {
+            if (state.wakeLock) {
+                state.wakeLock.release();
+                state.wakeLock = null;
+            }
+        }
+
         // Storage
         function loadFromStorage() {
             const data = localStorage.getItem('golfDistanceDrill');
@@ -896,6 +928,7 @@
             stopBtn.addEventListener('click', stopSession);
             themeToggle.addEventListener('click', toggleTheme);
 
+            btnWithin10Plus.addEventListener('click', () => recordAccuracy(15));
             btnWithin10.addEventListener('click', () => recordAccuracy(10));
             btnWithin5.addEventListener('click', () => recordAccuracy(5));
             btnWithin3.addEventListener('click', () => recordAccuracy(3));
@@ -956,6 +989,9 @@
             sessionControls.classList.add('active');
             pauseBtn.textContent = 'PAUSE';
             pauseBtn.classList.remove('paused');
+
+            // Keep screen awake
+            requestWakeLock();
 
             // Disable club selection during session
             document.querySelectorAll('.club-option').forEach(opt => {
@@ -1058,6 +1094,9 @@
             state.isActive = false;
             state.isPaused = false;
             clearInterval(state.timerInterval);
+
+            // Allow screen to sleep again
+            releaseWakeLock();
 
             // Hide session controls, show main button
             sessionControls.classList.remove('active');
@@ -1201,6 +1240,7 @@
         }
 
         function setAccuracyButtonsEnabled(enabled) {
+            btnWithin10Plus.disabled = !enabled;
             btnWithin10.disabled = !enabled;
             btnWithin5.disabled = !enabled;
             btnWithin3.disabled = !enabled;
