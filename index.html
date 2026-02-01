@@ -947,7 +947,10 @@
             stopBtn.addEventListener('click', stopSession);
             themeToggle.addEventListener('click', toggleTheme);
 
-            btnWithin10Plus.addEventListener('click', () => recordAccuracy(15));
+            btnWithin10Plus.addEventListener('click', () => {
+                showBadShotCelebration();
+                recordAccuracy(15);
+            });
             btnWithin10.addEventListener('click', () => recordAccuracy(10));
             btnWithin5.addEventListener('click', () => recordAccuracy(5));
             btnWithin3.addEventListener('click', () => recordAccuracy(3));
@@ -1322,6 +1325,29 @@
                     celebration.appendChild(emoji);
                     setTimeout(() => emoji.remove(), 2000);
                 }, i * 50);
+            }
+
+            setTimeout(() => {
+                celebration.classList.remove('active');
+                celebration.innerHTML = '';
+            }, 2000);
+        }
+
+        // Bad shot reaction (10+)
+        function showBadShotCelebration() {
+            celebration.classList.add('active');
+
+            // Burst of throw up emojis
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const emoji = document.createElement('span');
+                    emoji.className = 'fire-emoji';
+                    emoji.textContent = '🤮';
+                    emoji.style.left = `${Math.random() * 100}%`;
+                    emoji.style.bottom = '0';
+                    celebration.appendChild(emoji);
+                    setTimeout(() => emoji.remove(), 2000);
+                }, i * 60);
             }
 
             setTimeout(() => {
