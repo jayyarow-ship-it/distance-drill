@@ -834,7 +834,9 @@
             timeRemaining: 35,
             sessions: [],
             totalStars: 0,
-            wakeLock: null
+            wakeLock: null,
+            recognition: null,
+            isListening: false
         };
 
         // Constants
@@ -886,6 +888,7 @@
             loadTheme();
             updateStarsDisplay();
             setupEventListeners();
+            setupSpeechRecognition();
         }
 
         // Theme
@@ -920,6 +923,120 @@
             if (state.wakeLock) {
                 state.wakeLock.release();
                 state.wakeLock = null;
+            }
+        }
+
+        // Speech synthesis (text-to-speech)
+        function speak(text, onEnd = null) {
+            if ('speechSynthesis' in window) {
+                // Cancel any ongoing speech
+                window.speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.1;
+                utterance.pitch = 1;
+                if (onEnd) {
+                    utterance.onend = onEnd;
+                }
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Speech recognition (voice commands)
+        function setupSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.log('Speech recognition not supported');
+                return;
+            }
+
+            state.recognition = new SpeechRecognition();
+            state.recognition.continuous = true;
+            state.recognition.interimResults = false;
+            state.recognition.lang = 'en-US';
+
+            state.recognition.onresult = (event) => {
+                const last = event.results.length - 1;
+                const command = event.results[last][0].transcript.toLowerCase().trim();
+                console.log('Heard:', command);
+                handleVoiceCommand(command);
+            };
+
+            state.recognition.onerror = (event) => {
+                console.log('Speech error:', event.error);
+                if (event.error === 'no-speech' || event.error === 'aborted') {
+                    // Restart if still in session
+                    if (state.isActive && !state.isPaused && state.isListening) {
+                        restartRecognition();
+                    }
+                }
+            };
+
+            state.recognition.onend = () => {
+                // Restart if still in session
+                if (state.isActive && !state.isPaused && state.isListening) {
+                    restartRecognition();
+                }
+            };
+        }
+
+        function restartRecognition() {
+            try {
+                setTimeout(() => {
+                    if (state.isActive && !state.isPaused && state.recognition) {
+                        state.recognition.start();
+                    }
+                }, 100);
+            } catch (e) {
+                console.log('Recognition restart error:', e);
+            }
+        }
+
+        function startListening() {
+            if (state.recognition && !state.isListening) {
+                try {
+                    state.isListening = true;
+                    state.recognition.start();
+                } catch (e) {
+                    console.log('Start listening error:', e);
+                }
+            }
+        }
+
+        function stopListening() {
+            state.isListening = false;
+            if (state.recognition) {
+                try {
+                    state.recognition.stop();
+                } catch (e) {
+                    console.log('Stop listening error:', e);
+                }
+            }
+        }
+
+        function handleVoiceCommand(command) {
+            if (!state.isActive || state.isPaused) return;
+
+            // Check for accuracy commands
+            if (command.includes('ten plus') || command.includes('10 plus') || command.includes('10+') || command.includes('ten+')) {
+                showBadShotCelebration();
+                recordAccuracy(15);
+            } else if (command.includes('ten') || command.includes('10')) {
+                recordAccuracy(10);
+            } else if (command.includes('five') || command.includes('5')) {
+                recordAccuracy(5);
+            } else if (command.includes('three') || command.includes('3')) {
+                recordAccuracy(3);
+            } else if (command.includes('one') || command.includes('1') || command.includes('won')) {
+                showPerfectShotCelebration();
+                speak('Good job Tiger!');
+                recordAccuracy(1);
+            } else if (command.includes('pause')) {
+                togglePause();
+            } else if (command.includes('stop')) {
+                stopSession();
+            } else if (command.includes('new') || command.includes('refresh') || command.includes('skip')) {
+                refreshNumber();
             }
         }
 
@@ -1019,6 +1136,9 @@
             // Keep screen awake
             requestWakeLock();
 
+            // Start voice recognition
+            startListening();
+
             // Disable club selection during session
             document.querySelectorAll('.club-option').forEach(opt => {
                 opt.style.pointerEvents = 'none';
@@ -1037,6 +1157,9 @@
                 pausedIndicator.classList.remove('active');
                 setAccuracyButtonsEnabled(true);
                 resumeTimer();
+                startListening();
+                // Re-announce current number
+                speak(state.currentDistance + ' yards');
             } else {
                 // Pause
                 state.isPaused = true;
@@ -1045,6 +1168,8 @@
                 pausedIndicator.classList.add('active');
                 setAccuracyButtonsEnabled(false);
                 clearInterval(state.timerInterval);
+                stopListening();
+                speak('Paused');
             }
         }
 
@@ -1124,6 +1249,9 @@
             // Allow screen to sleep again
             releaseWakeLock();
 
+            // Stop voice recognition
+            stopListening();
+
             // Hide session controls, show main button
             sessionControls.classList.remove('active');
             mainButton.style.display = 'block';
@@ -1200,6 +1328,9 @@
             timerBar.style.display = 'block';
 
             distanceNumber.textContent = state.currentDistance;
+
+            // Announce the distance
+            speak(state.currentDistance + ' yards');
 
             // Update stats
             attemptCurrent.textContent = state.currentAttempt;
